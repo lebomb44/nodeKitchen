@@ -5,32 +5,52 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-ShutterButton windowShutterButton(String("kitchen_windowShutterButton"), 12, 11); // 6, 5);
-Contact windowSensor_window(String("kitchen_windowSensor_window"), 10);
-Contact windowSensor_shutter(String("kitchen_windowSensor_shutter"), 9);
+const char nodeName[] PROGMEM = "kitchen";
+const char sepName[] PROGMEM = " ";
+const char hkName[] PROGMEM = "hk";
+const char cmdGetName[] PROGMEM = "get";
+const char cmdSetName[] PROGMEM = "set";
 
-ShutterButton doorShutterButton(String("kitchen_doorShutterButton"), A3, A2);
-Contact doorSensor_window(String("kitchen_doorSensor_window"), A1);
-Contact doorSensor_shutter(String("kitchen_doorSensor_shutter"), A0);
+const char windowShutterButtonName[] PROGMEM = "windowShutterButton";
+const char windowWindowContactName[] PROGMEM = "windowWindowContact";
+const char windowShutterContactName[] PROGMEM = "windowShutterContact";
+const char doorShutterButtonName[] PROGMEM = "doorShutterButton";
+const char doorWindowContactName[] PROGMEM = "doorWindowContact";
+const char doorShutterContactName[] PROGMEM = "doorShutterContact";
+const char lightRelayName[] PROGMEM = "lightRelay";
+const char entryRelayName[] PROGMEM = "entryRelay";
+const char upRelayName[] PROGMEM = "upRelay";
+const char downRelayName[] PROGMEM = "downRelay";
+const char tempSensorsName[] PROGMEM = "tempSensors";
 
-Relay light("kitchen_lightRelay", 13);
-Relay entry("kitchen_entryRelay", 4);
-Relay up("u", 6);
-Relay down("d", 5);
+ShutterButton windowShutterButton(windowShutterButtonName, 12, 11);
+Contact windowWindowContact(windowWindowContactName, 10);
+Contact windowShutterContact(windowShutterContactName, 9);
+
+ShutterButton doorShutterButton(doorShutterButtonName, A3, A2);
+Contact doorWindowContact(doorWindowContactName, A1);
+Contact doorShutterContact(doorShutterContactName, A0);
+
+Relay lightRelay(lightRelayName, 13);
+Relay entryRelay(entryRelayName, 4);
+
+/* Not used */
+Relay upRelay(upRelayName, 6);
+Relay downRelay(downRelayName, 5);
 
 OneWire oneWire(2);
 DallasTemperature tempSensors(&oneWire);
 
 void windowShutterButton_cmdGet(int arg_cnt, char **args) { windowShutterButton.cmdGet(arg_cnt, args); }
-void windowSensor_window_cmdGet(int arg_cnt, char **args) { windowSensor_window.cmdGet(arg_cnt, args); }
-void windowSensor_shutter_cmdGet(int arg_cnt, char **args) { windowSensor_shutter.cmdGet(arg_cnt, args); }
+void windowWindowContact_cmdGet(int arg_cnt, char **args) { windowWindowContact.cmdGet(arg_cnt, args); }
+void windowShutterContact_cmdGet(int arg_cnt, char **args) { windowShutterContact.cmdGet(arg_cnt, args); }
 void doorShutterButton_cmdGet(int arg_cnt, char **args) { doorShutterButton.cmdGet(arg_cnt, args); }
-void doorSensor_window_cmdGet(int arg_cnt, char **args) { doorSensor_window.cmdGet(arg_cnt, args); }
-void doorSensor_shutter_cmdGet(int arg_cnt, char **args) { doorSensor_shutter.cmdGet(arg_cnt, args); }
-void light_cmdGet(int arg_cnt, char **args) { light.cmdGet(arg_cnt, args); }
-void light_cmdSet(int arg_cnt, char **args) { light.cmdSet(arg_cnt, args); }
-void entry_cmdGet(int arg_cnt, char **args) { entry.cmdGet(arg_cnt, args); }
-void entry_cmdSet(int arg_cnt, char **args) { entry.cmdSet(arg_cnt, args); }
+void doorWindowContact_cmdGet(int arg_cnt, char **args) { doorWindowContact.cmdGet(arg_cnt, args); }
+void doorShutterContact_cmdGet(int arg_cnt, char **args) { doorShutterContact.cmdGet(arg_cnt, args); }
+void lightRelay_cmdGet(int arg_cnt, char **args) { lightRelay.cmdGet(arg_cnt, args); }
+void lightRelay_cmdSet(int arg_cnt, char **args) { lightRelay.cmdSet(arg_cnt, args); }
+void entryRelay_cmdGet(int arg_cnt, char **args) { entryRelay.cmdGet(arg_cnt, args); }
+void entryRelay_cmdSet(int arg_cnt, char **args) { entryRelay.cmdSet(arg_cnt, args); }
 uint8_t tempSensorsNb = 0;
 
 void setup() {
@@ -42,19 +62,23 @@ void setup() {
   if (tempSensors.getAddress(deviceAddress, 0)) tempSensors.setResolution(deviceAddress, 12);
   tempSensorsNb = tempSensors.getDeviceCount();
   
-  cncInit();
-  cncAdd("kitchen_windowShutterButton_get" , windowShutterButton_cmdGet);
-  cncAdd("kitchen_windowSensor_window_get" , windowSensor_window_cmdGet);
-  cncAdd("kitchen_windowSensor_shutter_get", windowSensor_shutter_cmdGet);
-  cncAdd("kitchen_doorShutterButton_get" , doorShutterButton_cmdGet);
-  cncAdd("kitchen_doorSensor_window_get" , doorSensor_window_cmdGet);
-  cncAdd("kitchen_doorSensor_shutter_get", doorSensor_shutter_cmdGet);
-  cncAdd("kitchen_light_cmdGet", light_cmdGet);
-  cncAdd("kitchen_light_cmdSet", light_cmdSet);
-  cncAdd("kitchen_entry_cmdGet", entry_cmdGet);
-  cncAdd("kitchen_entry_cmdSet", entry_cmdSet);
-  up.open();
-  down.open();
+  cncInit(nodeName);
+  cnc_hkName_set(hkName);
+  cnc_cmdGetName_set(cmdGetName);
+  cnc_cmdSetName_set(cmdSetName);
+  cnc_sepName_set(sepName);
+  cnc_cmdGet_Add(windowShutterButtonName, windowShutterButton_cmdGet);
+  cnc_cmdGet_Add(windowWindowContactName , windowWindowContact_cmdGet);
+  cnc_cmdGet_Add(windowShutterContactName, windowShutterContact_cmdGet);
+  cnc_cmdGet_Add(doorShutterButtonName, doorShutterButton_cmdGet);
+  cnc_cmdGet_Add(doorWindowContactName, doorWindowContact_cmdGet);
+  cnc_cmdGet_Add(doorShutterContactName, doorShutterContact_cmdGet);
+  cnc_cmdGet_Add(lightRelayName, lightRelay_cmdGet);
+  cnc_cmdSet_Add(lightRelayName, lightRelay_cmdSet);
+  cnc_cmdGet_Add(entryRelayName, entryRelay_cmdGet);
+  cnc_cmdSet_Add(entryRelayName, entryRelay_cmdSet);
+  upRelay.open();
+  downRelay.open();
 }
 
 
@@ -63,22 +87,19 @@ void loop() {
   delay(1);
   windowShutterButton.run(false);
   doorShutterButton.run(false);
-  light.run(false);
-  entry.run(false);
+  lightRelay.run(false);
+  entryRelay.run(false);
 
   /* HK @ 1Hz */
   if(0 == loopNb%1000) {
-    windowSensor_window.run(true);
-    windowSensor_shutter.run(true);
-    doorSensor_window.run(true);
-    doorSensor_shutter.run(true);
+    windowWindowContact.run(true);
+    windowShutterContact.run(true);
+    doorWindowContact.run(true);
+    doorShutterContact.run(true);
     tempSensorsNb = tempSensors.getDeviceCount();
     tempSensors.requestTemperatures();
     for(uint8_t i=0; i<tempSensorsNb; i++)  {
-      Serial.print("kitchen_tempSensors_hk ");
-      Serial.print(i, DEC);
-      Serial.print(" ");
-      Serial.println(tempSensors.getTempCByIndex(i));
+      cnc_print_hk_index(tempSensorsName, i, tempSensors.getTempCByIndex(i));
     }
   }
   cncPoll();
