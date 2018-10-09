@@ -42,7 +42,7 @@ DallasTemperature tempSensors(&oneWire);
 
 static uint32_t loopNb = 0;
 
-void ping_cmdGet(int arg_cnt, char **args) { cnc_print_cmdGet(pingName, loopNb); }
+void ping_cmdGet(int arg_cnt, char **args) { cnc_print_cmdGet_u32(pingName, loopNb); }
 void windowWindowContact_cmdGet(int arg_cnt, char **args) { windowWindowContact.cmdGet(arg_cnt, args); }
 void windowShutterContact_cmdGet(int arg_cnt, char **args) { windowShutterContact.cmdGet(arg_cnt, args); }
 void doorShutterButton_cmdGet(int arg_cnt, char **args) { doorShutterButton.cmdGet(arg_cnt, args); }
@@ -98,10 +98,11 @@ void loop() {
     tempSensorsNb = tempSensors.getDeviceCount();
     tempSensors.requestTemperatures();
     for(uint8_t i=0; i<tempSensorsNb; i++)  {
-      cnc_print_hk_index(tempSensorsName, i, tempSensors.getTempCByIndex(i));
+      cnc_print_hk_index_float(tempSensorsName, i, tempSensors.getTempCByIndex(i));
     }
   }
   cncPoll();
   loopNb++;
+  if(1000000000 <= loopNb) { loopNb = 0; }
 }
 
