@@ -56,13 +56,6 @@ uint8_t tempSensorsNb = 0;
 
 void setup() {
   Serial.begin(115200);
-  //oneWire.setPin(2);
-  tempSensors.setOneWire(&oneWire);
-  tempSensors.begin();
-  DeviceAddress deviceAddress;
-  if (tempSensors.getAddress(deviceAddress, 0)) tempSensors.setResolution(deviceAddress, 12);
-  tempSensorsNb = tempSensors.getDeviceCount();
-  
   cncInit(nodeName);
   cnc_hkName_set(hkName);
   cnc_cmdGetName_set(cmdGetName);
@@ -89,20 +82,22 @@ void loop() {
   lightRelay.run(false);
   entryRelay.run(false);
 
-  /* HK @ 1Hz */
-  if(0 == loopNb%1000) {
+  /* HK @ 0.1Hz */
+  if(0 == loopNb%10000) {
     windowWindowContact.run(true);
     windowShutterContact.run(true);
     doorWindowContact.run(true);
     doorShutterContact.run(true);
+    tempSensors.begin();
     tempSensorsNb = tempSensors.getDeviceCount();
     tempSensors.requestTemperatures();
     for(uint8_t i=0; i<tempSensorsNb; i++)  {
-      cnc_print_hk_index_float(tempSensorsName, i, tempSensors.getTempCByIndex(i));
+      DeviceAddress sensorAddr;
+      tempSensors.getAddress(sensorAddr, i);
+      cnc_print_hk_temp_sensor(tempSensorsName, sensorAddr, tempSensors.getTempCByIndex(i));
     }
   }
   cncPoll();
   loopNb++;
   if(1000000000 <= loopNb) { loopNb = 0; }
 }
-
