@@ -7,7 +7,7 @@
 
 const char nodeName[] PROGMEM = "kitchen";
 const char sepName[] PROGMEM = " ";
-const char hkName[] PROGMEM = "hk";
+const char hkName[] PROGMEM = "val";
 const char cmdGetName[] PROGMEM = "get";
 const char cmdSetName[] PROGMEM = "set";
 
@@ -40,8 +40,8 @@ Relay entryRelay(entryRelayName, 4);
 OneWire oneWire(2);
 DallasTemperature tempSensors(&oneWire);
 
-uint32_t previousTime_Contact = 0;
-uint32_t previousTime_Temp = 0;
+uint32_t previousTime_1s = 0;
+uint32_t previousTime_10s = 0;
 uint32_t currentTime = 0;
 
 void ping_cmdGet(int arg_cnt, char **args) { cnc_print_cmdGet_u32(pingName, currentTime); }
@@ -75,26 +75,25 @@ void setup() {
   cnc_cmdSet_Add(entryRelayName, entryRelay_cmdSet);
   windowShutterUpRelay.open();
   windowShutterDownRelay.open();
-  previousTime_Contact = millis();
-  previousTime_Temp = millis();
+  previousTime_1s = millis();
+  previousTime_10s = previousTime_1s;
 }
 
 void loop() {
-  doorShutterButton.run(false); cncPoll();
-  lightRelay.run(false); cncPoll();
-  entryRelay.run(false); cncPoll();
-
-  /* Contact HK @ 1.0Hz */
   currentTime = millis(); cncPoll();
-  if((uint32_t)(currentTime - previousTime_Contact) >= 1000) {
+  /* HK @ 1.0Hz */
+  if((uint32_t)(currentTime - previousTime_1s) >= 1000) {
     windowWindowContact.run(true); cncPoll();
     windowShutterContact.run(true); cncPoll();
     doorWindowContact.run(true); cncPoll();
     doorShutterContact.run(true); cncPoll();
-    previousTime_Contact = currentTime;
+    doorShutterButton.run(true); cncPoll();
+    lightRelay.run(true); cncPoll();
+    entryRelay.run(true); cncPoll();
+    previousTime_1s = currentTime;
   }
-  /* Temperature HK @ 0.01Hz */
-  if((uint32_t)(currentTime - previousTime_Temp) >= 100000) {
+  /* HK @ 0.1Hz */
+  if((uint32_t)(currentTime - previousTime_10s) >= 10000) {
     tempSensors.begin(); cncPoll();
     tempSensorsNb = tempSensors.getDeviceCount(); cncPoll();
     tempSensors.requestTemperatures(); cncPoll();
@@ -103,7 +102,6 @@ void loop() {
       tempSensors.getAddress(sensorAddr, i); cncPoll();
       cnc_print_hk_temp_sensor(tempSensorsName, sensorAddr, tempSensors.getTempCByIndex(i)); cncPoll();
     }
-    previousTime_Temp = currentTime;
+    previousTime_10s = currentTime;
   }
-  cncPoll();
 }
