@@ -81,8 +81,8 @@ void setup() {
 
 void loop() {
   currentTime = millis(); cncPoll();
-  /* HK @ 1.0Hz */
-  if((uint32_t)(currentTime - previousTime_1s) >= 1000) {
+  /* HK @ 2.0Hz */
+  if((uint32_t)(currentTime - previousTime_1s) >= 500) {
     windowWindowContact.run(true); cncPoll();
     windowShutterContact.run(true); cncPoll();
     doorWindowContact.run(true); cncPoll();
@@ -100,7 +100,10 @@ void loop() {
     for(uint8_t i=0; i<tempSensorsNb; i++)  {
       DeviceAddress sensorAddr;
       tempSensors.getAddress(sensorAddr, i); cncPoll();
-      cnc_print_hk_temp_sensor(tempSensorsName, sensorAddr, tempSensors.getTempCByIndex(i)); cncPoll();
+      float temp_ = tempSensors.getTempCByIndex(i);
+      if(DEVICE_DISCONNECTED_C != temp_) {
+        cnc_print_hk_temp_sensor(tempSensorsName, sensorAddr, temp_); cncPoll();
+      }
     }
     previousTime_10s = currentTime;
   }
